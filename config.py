@@ -1,6 +1,6 @@
 pre = '/Users/phr/Desktop'
 train_file = pre+'/Parser/files/small-bin.txt'
-dev_file = pre+'/Parser/files/small-dev.txt'
+# train_file = pre+'/Parser/files/small-dev.txt'
 # train_file = pre+'/Parser/files/train.txt'
 # dev_file = pre+'/Parser/files/dev.txt'
 output_dir = pre+'/Parser/output/'
@@ -17,7 +17,12 @@ dev = None
 nonterminal_map = None
 terminal_map = None
 
-vanilla = None
+pcfg = None
+I, O = None, None
+Inode, Onode = None, None
+singular_value_cutoff = 0.01
+max_state = 32
+proj = None
 
 prune_cutoff = 1e-5
 numba_ready = False

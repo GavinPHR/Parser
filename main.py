@@ -1,6 +1,6 @@
 import config
 from preprocessing import mappings, transforms, treebank_reader
-from training import pcfg
+from training import pcfg, lpcfg
 
 if __name__ == '__main__':
     config.train = treebank_reader.read(config.train_file)
@@ -9,8 +9,10 @@ if __name__ == '__main__':
     config.terminal_map = mappings.TerminalMap(config.train, len(config.nonterminal_map))
     transforms.transform_trees(config.train)
 
-    config.vanilla = pcfg.PCFG()
+    config.pcfg = pcfg.PCFG()
     import training.feature.naacl
+    import training.svd
+    config.lpcfg = lpcfg.LPCFG()
 
     # config.save()
     # config.load()
