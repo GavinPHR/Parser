@@ -167,9 +167,9 @@ for tree in tqdm(config.train, desc='NAACL collect'):
 
 newI, newO = dict(), dict()
 for k, v in I.items():
-    newI[config.nonterminal_map[k]] = sparse.vstack(v) / M[k]
+    newI[config.nonterminal_map[k]] = sparse.vstack(v)
 for k, v in O.items():
-    newO[config.nonterminal_map[k]] = sparse.vstack(v) / M[k]
+    newO[config.nonterminal_map[k]] = sparse.vstack(v)
 
 config.I = newI
 config.O = newO

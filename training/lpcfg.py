@@ -16,8 +16,9 @@ class LPCFG:
     def populate(self):
         p = config.proj
         I, O = config.Inode, config.Onode
-        for tree in tqdm(config.train):
-            Y = I[tree].dot(p[tree.label()][0].T)[0]
+        for tree in tqdm(config.train, desc='Doing projections'):
+            idx = I[tree].nonzero()[1]
+            Y = np.sum(p[tree.label()][0][:, idx] * I[tree][0, idx].toarray()[0], axis=1)
             if tree.label() not in self.pi:
                 self.pi[tree.label()] = Y
             else:
@@ -26,7 +27,12 @@ class LPCFG:
                 if len(node) == 2:
                     a, b, c = node.label(), node[0].label(), node[1].label()
                     pi, pj, pk = p[a][1], p[b][0], p[c][0]
-                    Zi, Yj, Yk = O[node].dot(pi.T)[0], I[node[0]].dot(pj.T)[0], I[node[1]].dot(pk.T)[0]
+                    idx = O[node].nonzero()[1]
+                    Zi = np.sum(pi[:, idx] * O[node][0, idx].toarray()[0], axis=1)
+                    idx = I[node[0]].nonzero()[1]
+                    Yj = np.sum(pj[:, idx] * I[node[0]][0, idx].toarray()[0], axis=1)
+                    idx = I[node[1]].nonzero()[1]
+                    Yk = np.sum(pk[:, idx] * I[node[1]][0, idx].toarray()[0], axis=1)
                     r = Rule3(a, b, c)
                     if r not in self.rule3s:
                         self.rule3s[r] = np.einsum('i,j,k->ijk', Zi, Yj, Yk)
@@ -34,7 +40,8 @@ class LPCFG:
                         self.rule3s[r] += np.einsum('i,j,k->ijk', Zi, Yj, Yk)
                 elif len(node) == 1:
                     a, x = node.label(), node[0]
-                    Z = O[node].dot(p[a][1].T)[0]
+                    idx = O[node].nonzero()[1]
+                    Z = np.sum(p[a][1][:, idx] * O[node][0, idx].toarray()[0], axis=1)
                     r = Rule1(a, x)
                     if r not in self.rule1s:
                         self.rule1s[r] = Z

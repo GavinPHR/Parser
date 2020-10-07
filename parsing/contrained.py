@@ -3,7 +3,10 @@ from numba.typed import Dict, List
 from numba import njit
 from parsing.util import hash_forward, hash_backward, Tij, Tik, Tjk
 import numpy as np
+import warnings
 
+
+warnings.simplefilter('ignore')
 
 @njit(fastmath=True)
 def fill_inside_base(inside, terminals, N, r1, r1_lookup, constrains):

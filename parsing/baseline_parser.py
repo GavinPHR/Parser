@@ -1,5 +1,5 @@
 import config
-config.load_cpu()
+config.load()
 """
 The above line MUST be imported first
 Global parameters should not mutate at any time

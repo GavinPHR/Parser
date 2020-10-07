@@ -7,8 +7,8 @@ proj = dict()
 I, O = config.I, config.O
 
 for nt in tqdm(config.pcfg.nonterminals, desc='Doing SVDs'):
-    sigma = I[nt].T.dot(O[nt])
-    u, s, vt = svds(sigma, k=config.max_state)
+    sigma = (I[nt].T * O[nt]) / config.pcfg.nonterminals[nt]
+    u, s, vt = svds(sigma, k=min(I[nt].shape[0], config.max_state))
     ut = u.T
     idx = np.argsort(s)[::-1]
     i = 1
