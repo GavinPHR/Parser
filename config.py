@@ -1,9 +1,9 @@
 pre = '/Users/phr/Desktop'
 # train_file = pre+'/Parser/files/small-bin.txt'
 # train_file = pre+'/Parser/files/medium.txt'
-dev_file = pre+'/Parser/files/small-dev.txt'
+# dev_file = pre+'/Parser/files/small-dev.txt'
 train_file = pre+'/Parser/files/train.txt'
-# dev_file = pre+'/Parser/files/dev.txt'
+dev_file = pre+'/Parser/files/dev.txt'
 output_dir = pre+'/Parser/output/'
 
 import os
