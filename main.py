@@ -11,6 +11,9 @@ if __name__ == '__main__':
 
     config.pcfg = pcfg.PCFG()
     import training.feature.naacl
+    # import training.feature.level
+    # import training.feature.ngram
+    # import training.feature.naacl_rp
     import training.svd
     config.lpcfg = lpcfg.LPCFG()
     import training.lookup

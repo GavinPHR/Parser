@@ -1,5 +1,7 @@
 from collections import Counter, defaultdict
 import numpy as np
+from sklearn.random_projection import GaussianRandomProjection
+from sklearn.decomposition import PCA
 import scipy.sparse as sparse
 from preprocessing.transforms import transform_trees, inverse_transform_trees
 import config
@@ -82,41 +84,31 @@ def collect(node):
     data = []
     f = node.label() + ' ' + str(len(node.leaves()))
     col.append(mapi[f])
-    data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
     if len(node) == 1:
         f = node.label()+' '+node[0]
         col.append(mapi[f])
-        data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
     else:
         a, b, c = node.label(), node[0].label(), node[1].label()
         f = a + ' ' + b
         col.append(mapi[f])
-        data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         f = a + ' ' + c
         col.append(mapi[f])
-        data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         f = a + ' ' + b + ' ' + c
         col.append(mapi[f])
-        data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         if len(node[0]) == 1:
             f = a + ' (' + b + ' ' + node[0][0] + ') ' + c
             col.append(mapi[f])
-            data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         else:
             f = a + ' (' + b + ' ' + node[0][0].label() + ' ' + node[0][1].label() + ') ' + c
             col.append(mapi[f])
-            data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         if len(node[1]) == 1:
             f = a + ' ' + b + ' (' + c + ' ' + node[1][0] + ')'
             col.append(mapi[f])
-            data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         else:
             f = a + ' ' + b + ' (' + c + ' ' + node[1][0].label() + ' ' + node[1][1].label() + ')'
             col.append(mapi[f])
-            data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
-    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, len(mapi)))
+    fm = sparse.csr_matrix(([1]*len(col), ([0]*len(col), col)), shape=(1, len(mapi)))
     I[node.label()].append(fm)
-    Inode[node] = fm
 
 
     cnt = counto[node.label()]
@@ -125,14 +117,12 @@ def collect(node):
     c, p = node, node.parent()
     if p is None:
         col.append(mapo[node.label() + ' 0'])
-        data.append(sqrt(M[node.label()] / (cnt[node.label() + ' 0'] + 5)))
     if p is not None:
         if c is p[0]:
             s = p.label() + ' ' + p[0].label() + '* ' + p[1].label()
         else:
             s = p.label() + ' ' + p[0].label() + ' ' + p[1].label() + '*'
         col.append(mapo[s])
-        data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
         c, p = p, p.parent()
         if p is not None:
             if c is p[0]:
@@ -140,7 +130,6 @@ def collect(node):
             else:
                 s = p.label() + ' ' + p[0].label() + ' (' + s + ')'
             col.append(mapo[s])
-            data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
             c, p = p, p.parent()
             if p is not None:
                 if c is p[0]:
@@ -148,34 +137,38 @@ def collect(node):
                 else:
                     s = p.label() + ' ' + p[0].label() + ' (' + s + ')'
                 col.append(mapo[s])
-                data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
     if node.parent() is not None:
         s = node.label() + ' ' + node.parent().label()
         col.append(mapo[s])
-        data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
         if node.parent().parent() is not None:
             s = node.label() + ' ' + node.parent().label() + ' ' + node.parent().parent().label()
             col.append(mapo[s])
-            data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
-    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, len(mapo)))
+    fm = sparse.csr_matrix(([1]*len(col), ([0]*len(col), col)), shape=(1, len(mapo)))
     O[node.label()].append(fm)
-    Onode[node] = fm
 
 
 for tree in tqdm(config.train, desc='NAACL collect'):
     for node in tree.postorder():
         collect(node)
 
+rp = GaussianRandomProjection(n_components=500, random_state=42)
 newI, newO = dict(), dict()
-for k, v in I.items():
-    newI[config.nonterminal_map[k]] = sparse.vstack(v)
-for k, v in O.items():
-    newO[config.nonterminal_map[k]] = sparse.vstack(v)
+for k, v in tqdm(I.items(), desc='PCA/RP inside'):
+    newI[config.nonterminal_map[k]] = rp.fit_transform(sparse.vstack(v))
+for k, v in tqdm(O.items(), desc='PCA/RP outside'):
+    newO[config.nonterminal_map[k]] = rp.fit_transform(sparse.vstack(v))
 
 config.I = newI
 config.O = newO
-config.Onode = Onode
-config.Inode = Inode
 
 del M, counti, counto, mapi, mapo, I, O
 transform_trees(config.train)
+
+cnt = Counter()
+for tree in config.train:
+    for node in tree.postorder():
+        Inode[node] = config.I[node.label()][cnt[node.label()]]
+        Onode[node] = config.O[node.label()][cnt[node.label()]]
+        cnt[node.label()] += 1
+config.Onode = Onode
+config.Inode = Inode
