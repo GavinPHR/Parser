@@ -87,7 +87,7 @@ def recursive_build(parse_chart, score_chart, i, j, a=-1):
 
 # @njit(nogil=True)
 # @njit
-def get_charts(terminals, r3_p, r1_p, pi_p, r3_lookupC, r1_lookup, prune_cutoff, r3_f, r1_f, pi_f):
+def get_charts(terminals, r3_p, r1_p, pi_p, r3_lookupC, r1_lookup, prune_cutoff):
     # Passing in the global parameters is necessary
     # t = time()
     #  = args
@@ -115,16 +115,13 @@ def process_wrapper(terminals):
     if terminals is None:
         return '()'
     if not config.numba_ready:
-        from parsing import prepare_global_param
+        from parsing_ import prepare_global_param
     return get_charts(List(terminals), config.rule3s_prune,
                         config.rule1s_prune,
                         config.pi_prune,
                         config.rule3s_lookupC,
                         config.rule1s_lookup,
-                        config.prune_cutoff,
-                        config.rule3s_full,
-                        config.rule1s_full,
-                        config.pi_full)
+                        config.prune_cutoff)
 
 def prepare_args(sent):
     # uncased = [w.lower() for w in sent]

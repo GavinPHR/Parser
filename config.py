@@ -3,7 +3,7 @@ pre = '/Users/phr/Desktop'
 # train_file = pre+'/Parser/files/medium.txt'
 dev_file = pre+'/Parser/files/small-dev.txt'
 train_file = pre+'/Parser/files/train.txt'
-# dev_file = pre+'/Parser/files/dev.txt'
+# train_file = pre+'/Parser/files/dev.txt'
 output_dir = pre+'/Parser/output/'
 
 import os
@@ -22,7 +22,7 @@ pcfg = None
 I, O = None, None
 Inode, Onode = None, None
 singular_value_cutoff = 100
-max_state = 32
+max_state = 40
 proj = None
 lpcfg = None
 rule3s_lookupC = None
