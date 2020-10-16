@@ -161,27 +161,35 @@ for tree in tqdm(config.train, desc='NAACL collect'):
     for node in tree.postorder():
         collect(node)
 
-newI, newO = dict(), dict()
+newI = dict()
 for k, v in I.items():
-    newI[config.nonterminal_map[k]] = sparse.vstack(v)
-I = newI
-IDX = dict()
-G = dict()
-from scipy.sparse.linalg import svds
-for nt in tqdm(config.pcfg.nonterminals, desc='Doing SVDs'):
-    u, s, _ = svds(I[nt], k=(config.max_state if I[nt].shape[0] > 1000 else 1), return_singular_vectors='u')
-    i = -1
-    while i - 1 >= -len(s) and s[i - 1] > config.singular_value_cutoff:
-        i -= 1
-    print(config.nonterminal_map[nt], s[i:])
-    G[nt] = u[:, i:]
-    IDX[nt] = np.argmax(u[:, i:], axis=1)
+    newI[config.nonterminal_map[k]] = sparse.vstack(v).astype(float)
 
-cnt = Counter()
-for tree in config.train:
-    for node in tree.postorder():
-        nt = node.label()
-        node.set_label(nt + '-'+str(IDX[config.nonterminal_map[nt]][cnt[nt]]))
-        if len(node) == 1:
-            node[0] = config.terminal_map[node[0]]
-        cnt[nt] += 1
+I = newI
+# IDX = dict()
+# G = dict()
+# from sklearn.preprocessing import normalize
+# from scipy.sparse.linalg import svds
+# from sklearn.cluster import MiniBatchKMeans
+# from sklearn.feature_extraction.text import TfidfTransformer
+# tfidf = TfidfTransformer()
+# for nt in tqdm(config.pcfg.nonterminals, desc='Doing SVDs'):
+#     u, s, _ = svds(normalize(I[nt]), k=(config.max_state if I[nt].shape[0] > 1000 else 1), return_singular_vectors='u')
+#     i = -1
+#     # acc = s[i]
+#     while i - 1 >= -len(s) and s[i - 1] > config.singular_value_cutoff:
+#         i -= 1
+#         # acc += s[i]
+#     G[nt] = u[:, i:]
+#     km = MiniBatchKMeans(n_clusters=abs(i), batch_size=500, max_no_improvement=20)
+#     print(config.nonterminal_map[nt], s[i:], abs(i))
+#     IDX[nt] = km.fit_predict(normalize(u[:, i:]))
+#
+# cnt = Counter()
+# for tree in config.train:
+#     for node in tree.postorder():
+#         nt = node.label()
+#         node.set_label(nt + '-'+str(IDX[config.nonterminal_map[nt]][cnt[nt]]))
+#         if len(node) == 1:
+#             node[0] = config.terminal_map[node[0]]
+#         cnt[nt] += 1

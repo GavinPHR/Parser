@@ -5,7 +5,7 @@ import scipy.sparse as sparse
 import config
 from tqdm import tqdm
 from sklearn.cluster import MiniBatchKMeans
-
+from math import sqrt
 
 d = len(config.nonterminal_map)
 d2 = len(config.terminal_map)
@@ -64,8 +64,8 @@ for nt in tqdm(config.pcfg.nonterminals, desc='Doing SVDs'):
         i -= 1
         # acc += s[i]
     G[nt] = u[:, i:]
-    km = MiniBatchKMeans(n_clusters=abs(i))
-    print(config.nonterminal_map[nt], s[i:])
+    km = MiniBatchKMeans(n_clusters=abs(i), batch_size=500, max_no_improvement=20)
+    print(config.nonterminal_map[nt], s[i:], abs(i))
     IDX[nt] = km.fit_predict(normalize(u[:, i:]))
 
 cnt = Counter()
