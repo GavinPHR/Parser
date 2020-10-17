@@ -65,73 +65,74 @@ for tree in tqdm(config.train, desc='NAACL count'):
         M[node.label()] += 1
         do_count(node)
 
-mapi, mapo = dict(), dict()
+mapi, mapo = defaultdict(dict), defaultdict(dict)
 for nt, cnt in counti.items():
     for f in cnt:
-        mapi.setdefault(f, len(mapi))
+        mapi[nt].setdefault(f, len(mapi[nt]))
 for nt, cnt in counto.items():
-    i = 0
     for f in cnt:
-        mapo.setdefault(f, len(mapo))
+        mapo[nt].setdefault(f, len(mapo[nt]))
 
 I, O = defaultdict(list), defaultdict(list)
 Inode, Onode = dict(), dict()
 def collect(node):
     cnt = counti[node.label()]
+    map = mapi[node.label()]
     col = []
     data = []
     f = node.label() + ' ' + str(len(node.leaves()))
-    col.append(mapi[f])
+    col.append(map[f])
     data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
     if len(node) == 1:
         f = node.label()+' '+node[0]
-        col.append(mapi[f])
+        col.append(map[f])
         data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
     else:
         a, b, c = node.label(), node[0].label(), node[1].label()
         f = a + ' ' + b
-        col.append(mapi[f])
+        col.append(map[f])
         data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         f = a + ' ' + c
-        col.append(mapi[f])
+        col.append(map[f])
         data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         f = a + ' ' + b + ' ' + c
-        col.append(mapi[f])
+        col.append(map[f])
         data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         if len(node[0]) == 1:
             f = a + ' (' + b + ' ' + node[0][0] + ') ' + c
-            col.append(mapi[f])
+            col.append(map[f])
             data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         else:
             f = a + ' (' + b + ' ' + node[0][0].label() + ' ' + node[0][1].label() + ') ' + c
-            col.append(mapi[f])
+            col.append(map[f])
             data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         if len(node[1]) == 1:
             f = a + ' ' + b + ' (' + c + ' ' + node[1][0] + ')'
-            col.append(mapi[f])
+            col.append(map[f])
             data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
         else:
             f = a + ' ' + b + ' (' + c + ' ' + node[1][0].label() + ' ' + node[1][1].label() + ')'
-            col.append(mapi[f])
+            col.append(map[f])
             data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
-    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, len(mapi)))
+    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, len(map)))
     I[node.label()].append(fm)
     Inode[node] = fm
 
 
     cnt = counto[node.label()]
+    map = mapo[node.label()]
     col = []
     data = []
     c, p = node, node.parent()
     if p is None:
-        col.append(mapo[node.label() + ' 0'])
+        col.append(map[node.label() + ' 0'])
         data.append(sqrt(M[node.label()] / (cnt[node.label() + ' 0'] + 5)))
     if p is not None:
         if c is p[0]:
             s = p.label() + ' ' + p[0].label() + '* ' + p[1].label()
         else:
             s = p.label() + ' ' + p[0].label() + ' ' + p[1].label() + '*'
-        col.append(mapo[s])
+        col.append(map[s])
         data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
         c, p = p, p.parent()
         if p is not None:
@@ -139,7 +140,7 @@ def collect(node):
                 s = p.label() + ' (' + s + ') ' + p[1].label()
             else:
                 s = p.label() + ' ' + p[0].label() + ' (' + s + ')'
-            col.append(mapo[s])
+            col.append(map[s])
             data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
             c, p = p, p.parent()
             if p is not None:
@@ -147,17 +148,17 @@ def collect(node):
                     s = p.label() + ' (' + s + ') ' + p[1].label()
                 else:
                     s = p.label() + ' ' + p[0].label() + ' (' + s + ')'
-                col.append(mapo[s])
+                col.append(map[s])
                 data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
     if node.parent() is not None:
         s = node.label() + ' ' + node.parent().label()
-        col.append(mapo[s])
+        col.append(map[s])
         data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
         if node.parent().parent() is not None:
             s = node.label() + ' ' + node.parent().label() + ' ' + node.parent().parent().label()
-            col.append(mapo[s])
+            col.append(map[s])
             data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
-    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, len(mapo)))
+    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, len(map)))
     O[node.label()].append(fm)
     Onode[node] = fm
 
@@ -167,9 +168,9 @@ for tree in tqdm(config.train, desc='NAACL collect'):
         collect(node)
 
 newI, newO = dict(), dict()
-for k, v in I.items():
+for k, v in tqdm(I.items(), desc='Stacking sparse inside'):
     newI[config.nonterminal_map[k]] = sparse.vstack(v)
-for k, v in O.items():
+for k, v in tqdm(O.items(), desc='Stacking sparse outside'):
     newO[config.nonterminal_map[k]] = sparse.vstack(v)
 
 config.I = newI

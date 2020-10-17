@@ -128,7 +128,7 @@ def fill_marginal(marginal, inside, outside, prune_cutoff, N):
             for nonterm, o_score in outside[i][j].items():
                 if nonterm not in inside[i][j]:
                     continue
-                score = o_score * inside[i][j][nonterm] / tree_score
+                score = o_score * inside[i][j][nonterm] #/ tree_score
                 if score < prune_cutoff:
                     continue
                 marginal[i][j][nonterm] = score

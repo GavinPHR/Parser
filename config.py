@@ -11,7 +11,7 @@ if not os.path.exists(output_dir):
     os.makedirs(output_dir)
     print('Output directory created.')
 
-nonterminal_cutoff = 20
+nonterminal_cutoff = 10
 terminal_cutoff = 5
 train = None
 dev = None
@@ -21,12 +21,17 @@ terminal_map = None
 pcfg = None
 I, O = None, None
 Inode, Onode = None, None
-singular_value_cutoff = 100
-max_state = 40
+singular_value_cutoff = 0.01
+max_state = 32
 proj = None
 lpcfg = None
 rule3s_lookupC = None
 rule1s_lookup = None
+
+# Smooth params
+C = 30
+v = 0.6
+unary_cutoff = 1000
 
 prune_cutoff = 1e-5
 numba_ready = False

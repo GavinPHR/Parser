@@ -8,13 +8,8 @@ proj = dict()
 I, O = config.I, config.O
 
 for nt in tqdm(config.pcfg.nonterminals, desc='Doing SVDs'):
-    if type(I[nt]) == np.ndarray:
-        sigma = I[nt].T.dot(O[nt]) / config.pcfg.nonterminals[nt]
-        u, s, vt = svd(sigma, full_matrices=False)
-    else:
-        print('wrong')
-        sigma = (I[nt].T * O[nt]) / config.pcfg.nonterminals[nt]
-        u, s, vt = svds(sigma, k=min(I[nt].shape[0], config.max_state))
+    sigma = (I[nt].T * O[nt]) / config.pcfg.nonterminals[nt]
+    u, s, vt = svds(sigma, k=min(min(sigma.shape), config.max_state)) #  if I[nt].shape[0] > 1000 else 1
     ut = u.T
     idx = np.argsort(s)[::-1]
     i = 1
