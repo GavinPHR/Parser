@@ -3,6 +3,7 @@ from tqdm import tqdm
 import config
 from training.rule import Rule3, Rule1
 from math import sqrt
+from copy import deepcopy
 
 class LPCFGSmoothed:
     def __init__(self):
@@ -86,7 +87,7 @@ class LPCFGSmoothed:
                     else:
                         self.Eax[r] += Z
                     if a not in self.H:
-                        self.H[a] = Z
+                        self.H[a] = deepcopy(Z)
                     else:
                         self.H[a] += Z
                 else:

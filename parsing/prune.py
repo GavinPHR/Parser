@@ -3,33 +3,6 @@ from numba.typed import Dict, List
 from numba import njit
 from parsing.util import hash_backward
 
-@njit(fastmath=True)
-def add_unary_inside(d, r2, r2_lookupR):
-    for b in d:
-        if b not in r2_lookupR:
-            continue
-        for rule in r2_lookupR[b]:
-            a, _, _ = hash_backward(rule)
-            res = r2[rule] * d[b]
-            if a not in d:
-                d[a] = res
-            else:
-                d[a] += res
-
-@njit(fastmath=True)
-def add_unary_outside(d, r2, r2_lookupL, d_inside):
-    for a in d:
-        if a not in r2_lookupL:
-            continue
-        for rule in r2_lookupL[a]:
-            _, b, _ = hash_backward(rule)
-            if b not in d_inside:
-                continue
-            res = d[a] * r2[rule]
-            if b not in d:
-                d[b] = res
-            else:
-                d[b] += res
 
 @njit(fastmath=True)
 def fill_inside_base(inside, terminals, N, r2, r1, r2_lookupR, r1_lookup):
@@ -37,7 +10,6 @@ def fill_inside_base(inside, terminals, N, r2, r1, r2_lookupR, r1_lookup):
         for rule in r1_lookup[terminals[i]]:
             a, _, _ = hash_backward(rule)
             inside[i][i][a] = r1[rule]
-        add_unary_inside(inside[i][i], r2, r2_lookupR)
 
 
 @njit(fastmath=True)
@@ -60,7 +32,6 @@ def fill_inside(inside, N, r3, r2, r3_lookupC, r2_lookupR):
                             inside[i][j][a] = res
                         else:
                             inside[i][j][a] += res
-            add_unary_inside(inside[i][j], r2, r2_lookupR)
 
 @njit(fastmath=True)
 def fill_outside_base(outside, inside, N, r2, pi, r2_lookupL):
@@ -68,7 +39,6 @@ def fill_outside_base(outside, inside, N, r2, pi, r2_lookupL):
         if nonterm not in inside[0][N-1]:
             continue
         outside[0][N-1][nonterm] = prob
-    add_unary_outside(outside[0][N-1], r2, r2_lookupL, inside[0][N-1])
 
 @njit(fastmath=True)
 def fill_outside(outside, inside, N, r3, r2, r3_lookupC, r2_lookupL):
@@ -111,7 +81,6 @@ def fill_outside(outside, inside, N, r3, r2, r3_lookupC, r2_lookupL):
                             outside[i][j][b] = res
                         else:
                             outside[i][j][b] += res
-            add_unary_outside(outside[i][j], r2, r2_lookupL, inside[i][j])
 
 @njit(fastmath=True)
 def fill_marginal(marginal, inside, outside, prune_cutoff, N):
@@ -128,7 +97,7 @@ def fill_marginal(marginal, inside, outside, prune_cutoff, N):
             for nonterm, o_score in outside[i][j].items():
                 if nonterm not in inside[i][j]:
                     continue
-                score = o_score * inside[i][j][nonterm] #/ tree_score
+                score = o_score * inside[i][j][nonterm] / tree_score
                 if score < prune_cutoff:
                     continue
                 marginal[i][j][nonterm] = score

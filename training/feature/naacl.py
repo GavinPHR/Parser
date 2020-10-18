@@ -114,7 +114,7 @@ def collect(node):
             f = a + ' ' + b + ' (' + c + ' ' + node[1][0].label() + ' ' + node[1][1].label() + ')'
             col.append(map[f])
             data.append(sqrt(M[node.label()] / (cnt[f] + 5)))
-    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, len(map)))
+    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, max(len(map), 2)))
     I[node.label()].append(fm)
     Inode[node] = fm
 
@@ -158,7 +158,7 @@ def collect(node):
             s = node.label() + ' ' + node.parent().label() + ' ' + node.parent().parent().label()
             col.append(map[s])
             data.append(sqrt(M[node.label()] / (cnt[s] + 5)))
-    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, len(map)))
+    fm = sparse.csr_matrix((data, ([0]*len(col), col)), shape=(1, max(2, len(map))))
     O[node.label()].append(fm)
     Onode[node] = fm
 

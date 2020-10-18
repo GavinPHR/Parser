@@ -126,13 +126,16 @@ def process_wrapper(terminals):
                         config.rule1s_full,
                         config.pi_full)
 
+from nltk.tag.stanford import StanfordPOSTagger
+tagger = StanfordPOSTagger('english-bidirectional-distsim.tagger', path_to_jar='stanford-postagger.jar')
+
 def prepare_args(sent):
     # uncased = [w.lower() for w in sent]
     uncased = sent
     # print(uncased)
     terminals = []
     fail_flag = False
-    for wordC, POS in nltk.pos_tag(uncased):
+    for wordC, POS in tagger.tag(uncased):
         word = wordC.lower()
         if word not in config.terminal_map.term2int:
             # Fall back to POS tag
@@ -143,7 +146,18 @@ def prepare_args(sent):
                 terminals.append(config.terminal_map[POS])
                 # print(word, POS)
         else:
-            terminals.append(config.terminal_map[word])
+            flag = False
+            for rule in config.rule1s_lookup[config.terminal_map[word]]:
+                rpos = config.nonterminal_map[rule.a]
+                idx = rpos.rfind('+')
+                rpos = rpos[idx+1:]
+                if POS == rpos:
+                    flag = True
+                    break
+            if flag:
+                terminals.append(config.terminal_map[word])
+            else:
+                terminals.append(config.terminal_map[POS])
     # print(terminals)
     if fail_flag:
         return None
