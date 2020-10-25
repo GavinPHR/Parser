@@ -133,36 +133,32 @@ def prepare_args(sent):
     # uncased = [w.lower() for w in sent]
     uncased = sent
     # print(uncased)
-    terminals = []
-    fail_flag = False
+    rules = []
     for wordC, POS in tagger.tag(uncased):
         word = wordC.lower()
-        if word not in config.terminal_map.term2int:
-            # Fall back to POS tag
-            if POS not in config.terminal_map.term2int:
-                fail_flag = True
-                break
-            else:
-                terminals.append(config.terminal_map[POS])
-                # print(word, POS)
-        else:
-            flag = False
+        flag = False
+        local = []
+        if word in config.terminal_map.term2int:
             for rule in config.rule1s_lookup[config.terminal_map[word]]:
                 rpos = config.nonterminal_map[rule.a]
                 idx = rpos.rfind('+')
                 rpos = rpos[idx+1:]
                 if POS == rpos:
                     flag = True
-                    break
-            if flag:
-                terminals.append(config.terminal_map[word])
-            else:
-                terminals.append(config.terminal_map[POS])
-    # print(terminals)
-    if fail_flag:
-        return None
+                    local.append(rule)
+            if not flag and POS in config.terminal_map.term2int:
+                local.extend(config.rule1s_lookup[config.terminal_map[POS]])
+            elif not flag:
+                local.extend(config.rule1s_lookup[config.terminal_map[word]])
+        else:
+            local.extend(config.rule1s_lookup[config.terminal_map[POS]])
+        # print(terminals)
+        if len(local) == 0:
+            return None
+        rules.append(list(map(hash, local)))
     else:
-        return terminals
+        print(rules)
+        return rules
 
 def parse_devset(dev_file):
     sents = []

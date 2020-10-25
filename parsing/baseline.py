@@ -8,7 +8,7 @@ import config
 @njit(fastmath=True)
 def fill_inside_base(inside, terminals, N, r1, r1_lookup):
     for i in range(N):
-        for rule in r1_lookup[terminals[i]]:
+        for rule in terminals[i]:
             a, _, _ = hash_backward(rule)
             inside[i][i][a] = r1[rule]
 

@@ -11,7 +11,7 @@ warnings.simplefilter('ignore')
 @njit(fastmath=True)
 def fill_inside_base(inside, terminals, N, r1, r1_lookup, constrains):
     for i in range(N):
-        for rule in r1_lookup[terminals[i]]:
+        for rule in terminals[i]:
             a, _, _ = hash_backward(rule)
             if a not in constrains[i][i]:
                 continue
