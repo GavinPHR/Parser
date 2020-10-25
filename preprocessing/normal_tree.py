@@ -77,7 +77,7 @@ class NormalTree(Tree):
                 NormalTree.to_lower(subtree)
     
     @classmethod
-    def normal_fromstring(cls, s):
+    def normal_fromstring(cls, s, lower=True):
         """
         This function is a modified version of nltk.tree.Tree.fromstring.
         """
@@ -133,5 +133,6 @@ class NormalTree(Tree):
         cls.remove_identity(tree)
         tree.chomsky_normal_form(factor='left', horzMarkov=0, vertMarkov=0)
         tree.collapse_unary(collapseRoot=True, collapsePOS=True)
-        cls.to_lower(tree)
+        if lower:
+            cls.to_lower(tree)
         return tree
