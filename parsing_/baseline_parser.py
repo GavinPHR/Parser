@@ -14,7 +14,7 @@ from numba.core import types
 from numba.typed import Dict, List
 import numpy as np
 from numba import njit, prange
-from parsing.baseline import prune
+from parsing_.baseline import prune
 from time import time
 import os
 import multiprocessing as mp

@@ -126,13 +126,15 @@ def process_wrapper(terminals):
                         config.rule1s_full,
                         config.pi_full)
 from nltk import pos_tag
+from nltk.tag.stanford import StanfordPOSTagger
+tagger = StanfordPOSTagger('english-bidirectional-distsim.tagger', path_to_jar='stanford-postagger.jar')
 
 def prepare_args(sent):
     # uncased = [w.lower() for w in sent]
     uncased = sent
     # print(uncased)
     rules = []
-    for wordC, POS in pos_tag(uncased):
+    for wordC, POS in tagger.tag(uncased):
         word = wordC.lower()
         flag = False
         local = []
@@ -154,7 +156,9 @@ def prepare_args(sent):
             print(wordC, POS)
             return None
         rules.append(list(map(hash, local)))
+        # rules.append(local)
     else:
+        # print(rules)
         return rules
 
 def parse_devset(dev_file):
@@ -163,7 +167,7 @@ def parse_devset(dev_file):
         for line in f:
             tree = Tree.fromstring(line)
             sents.append(tree.leaves())
-    args = list(map(prepare_args, sents))
+    args = list(tqdm(map(prepare_args, sents), total=len(sents)))
     # parses = []
     # t = tqdm(total=len(sents))
     cpu = os.cpu_count()
